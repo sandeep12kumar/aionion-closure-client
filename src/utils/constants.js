@@ -23,10 +23,9 @@ export const ACCOUNT_TYPE_LABEL = {
 };
 
 // Same list as server/config/constants.js CLOSURE_REASONS (the server's list is loaded from /meta)
-export const FALLBACK_REASONS = [
-  'Shifting of account',
-  'Nill holdings/Nill balance',
-];
+export const REASON_SHIFTING = 'Shifting of account';
+export const REASON_NIL_HOLDING = 'Nill holdings/Nill balance';
+export const FALLBACK_REASONS = [REASON_SHIFTING, REASON_NIL_HOLDING];
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 

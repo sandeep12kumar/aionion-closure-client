@@ -14,7 +14,7 @@ import SignatureCropper from '../components/upload/SignatureCropper.jsx';
 import FilePreviewModal from '../components/upload/FilePreviewModal.jsx';
 import CmrInfoModal from '../components/closure/CmrInfoModal.jsx';
 import DepositoryForm from '../components/closure/DepositoryForm.jsx';
-import { STEP_PATHS } from '../utils/constants.js';
+import { REASON_NIL_HOLDING, REASON_SHIFTING, STEP_PATHS } from '../utils/constants.js';
 import {
   checkCmrFile, checkSignatureFile, isCdslDpId, isDpName, isImageFile, isNsdlDpId,
 } from '../utils/validators.js';
@@ -44,9 +44,14 @@ export default function Step3Documents() {
   const navigate = useNavigate();
   const { session, setSession } = useClosure();
 
-  const [showCmrInfo, setShowCmrInfo] = useState(true);
+  // Reason from step 1: Shifting -> transfer + CMR mandatory | Nil holdings -> no transfer / CMR at all
+  const mustTransfer = session?.closureReason === REASON_SHIFTING;
+  const noTransfer = session?.closureReason === REASON_NIL_HOLDING;
+
+  const [showCmrInfo, setShowCmrInfo] = useState(!noTransfer);
   const [signature, setSignature] = useState(null);
-  const [transfer, setTransfer] = useState(Boolean(session?.transferSecurities));
+  const [transferChoice, setTransfer] = useState(Boolean(session?.transferSecurities));
+  const transfer = mustTransfer || (!noTransfer && transferChoice);
   const [details, setDetails] = useState(() => initialTransfer(session?.target));
   const [errors, setErrors] = useState({});
   const [cropOpen, setCropOpen] = useState(false);
@@ -194,8 +199,20 @@ export default function Step3Documents() {
           />
         </section>
 
-        {/* Security balance transfer */}
+        {/* Security balance transfer - not shown for Nil holdings */}
+        {!noTransfer && (
         <section className="card p-4 sm:p-6">
+          {mustTransfer ? (
+            <div className="rounded-2xl bg-brand-mist/70 p-3.5 ring-1 ring-brand-blue/20">
+              <p className="flex items-center gap-2 text-sm font-bold leading-snug text-slate-900">
+                <SwapIcon className="h-5 w-5 flex-shrink-0 text-brand-blue" />
+                Transfer security balances to own account or another account as per details given below:
+              </p>
+              <p className="ml-7 mt-1.5 text-xs text-slate-500">
+                Required for <span className="font-semibold">Shifting of account</span> - enter the target demat account and upload its CMR.
+              </p>
+            </div>
+          ) : (
           <div className={`rounded-2xl p-3.5 ring-1 transition ${transfer ? 'bg-brand-mist/70 ring-brand-blue/20' : 'bg-slate-50 ring-slate-200'}`}>
             <Checkbox
               checked={transfer}
@@ -208,6 +225,7 @@ export default function Step3Documents() {
               Tick this only if you hold securities with us. Otherwise click Submit Signature.
             </p>
           </div>
+          )}
 
           {transfer && (
             <div className="mt-4">
@@ -221,6 +239,7 @@ export default function Step3Documents() {
             </div>
           )}
         </section>
+        )}
 
         {/* Actions */}
         <div className="card flex flex-col-reverse gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4">
